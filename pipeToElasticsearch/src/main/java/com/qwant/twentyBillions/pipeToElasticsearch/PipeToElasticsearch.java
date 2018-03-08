@@ -52,7 +52,9 @@ public class PipeToElasticsearch extends Countable {
 	public static boolean VERBOSE = false;
 	public static boolean COUNTER = false;
 	public static boolean FAKE_FEEDER = false;
-
+	
+	private static final int BEGINING_OF_ID = 29;
+	private static final int SIZE_OF_ID = 8;
 	
 	public static void main(String[] args) {
 		// Disable log to avoid error
@@ -146,7 +148,8 @@ public class PipeToElasticsearch extends Countable {
 					Thread.sleep(10);
 				}
 				if (!FAKE_FEEDER) {
-					bulkProcessor.add(new IndexRequest(INDEX, "doc").source(message, XContentType.JSON));
+					String id = message.substring(BEGINING_OF_ID, BEGINING_OF_ID + SIZE_OF_ID);
+					bulkProcessor.add(new IndexRequest(INDEX, "doc", id).source(message, XContentType.JSON));
 				}
 
 //				if (VERBOSE) {
