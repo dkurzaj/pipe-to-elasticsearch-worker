@@ -102,10 +102,8 @@ public class PipeToElasticsearch extends Countable {
 				if (response.hasFailures()) {
 					System.out.println("[WARN] Bulk [" + executionId + "] executed with failures: " + response.buildFailureMessage());
 				} else {
-					if (VERBOSE) {
-						System.out.println("[DEBUG] Bulk [" + executionId + "] completed in "
-							+ response.getTook().getMillis() + " milliseconds");
-					}
+					System.out.println("[DEBUG] Bulk [" + executionId + "] completed in "
+						+ response.getTook().getMillis() + " milliseconds");
 				}
 			}
 
@@ -141,6 +139,7 @@ public class PipeToElasticsearch extends Countable {
 			BufferedReader pipe = new BufferedReader(new FileReader(NAMED_PIPE_PATH));
 			String message;
 
+			int i = 0;
 			while ((message = pipe.readLine()) != null) {
 				PipeToElasticsearch.nbMessagesSinceLastSecond.incrementAndGet();
 
@@ -152,9 +151,9 @@ public class PipeToElasticsearch extends Countable {
 					bulkProcessor.add(new IndexRequest(INDEX, "doc", id).source(message, XContentType.JSON));
 				}
 
-//				if (VERBOSE) {
-//					 System.out.println(message);
-//				}
+				if (VERBOSE && i % 50000 == 0) {
+					 System.out.println(message);
+				}
 			}
 			// Leave time in the end to execute the bulk
 			Thread.sleep(180000L + 5000L);
@@ -219,7 +218,7 @@ public class PipeToElasticsearch extends Countable {
 		nbConcurentSendingThreads.setRequired(false);
 		options.addOption(nbConcurentSendingThreads);
 		
-		Option verbose = new Option("v", "verbose", false, "Print messages transmitted");
+		Option verbose = new Option("v", "verbose", false, "Print one message every 50000 messages transmitted");
 		verbose.setRequired(false);
 		options.addOption(verbose);
 		
