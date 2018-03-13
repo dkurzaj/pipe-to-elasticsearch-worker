@@ -54,7 +54,7 @@ public class PipeToElasticsearch extends Countable {
 	public static boolean FAKE_FEEDER = false;
 	
 	private static final int BEGINING_OF_ID = 29;
-	private static final int SIZE_OF_ID = 8;
+	private static final int SIZE_OF_ID = 48;
 	
 	public static void main(String[] args) {
 		// Disable log to avoid error
@@ -132,7 +132,7 @@ public class PipeToElasticsearch extends Countable {
 			Process process = Runtime.getRuntime().exec(command);
 			process.waitFor();
 			
-			command = new String[] {"/bin/bash", "-c", "kafkacat -o -10000000 -t " + KAFKA_TOPIC + " -b " + KAFKA_IP + ":" + KAFKA_PORT + " -G " + KAFKA_GROUP + " -C > " + NAMED_PIPE_PATH};
+			command = new String[] {"/bin/bash", "-c", "kafkacat -t " + KAFKA_TOPIC + " -b " + KAFKA_IP + ":" + KAFKA_PORT + " -G " + KAFKA_GROUP + " -C > " + NAMED_PIPE_PATH};
 			process = Runtime.getRuntime().exec(command);
 
 			// Connect to the named pipe
