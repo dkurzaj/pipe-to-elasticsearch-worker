@@ -54,7 +54,7 @@ public class PipeToElasticsearch extends Countable {
 	public static boolean FAKE_FEEDER = false;
 	
 	private static final int BEGINING_OF_ID = 29;
-	private static final int SIZE_OF_ID = 48;
+	private static final int SIZE_OF_ID = 47;
 	
 	public static void main(String[] args) {
 		// Disable log to avoid error
