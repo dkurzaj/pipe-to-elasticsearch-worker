@@ -163,6 +163,7 @@ public class PipeToElasticsearch extends Countable {
 				if (VERBOSE && i % 50000 == 0) {
 					 System.out.println(message);
 				}
+				i++;
 			}
 			long endTime = System.nanoTime();
 			timeSpent = endTime - beginTime;
