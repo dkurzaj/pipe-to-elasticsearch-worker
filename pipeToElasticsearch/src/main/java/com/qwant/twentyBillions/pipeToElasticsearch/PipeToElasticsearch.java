@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,6 +52,7 @@ public class PipeToElasticsearch extends Countable {
 	
 	public static boolean VERBOSE = false;
 	public static boolean COUNTER = false;
+	public static Integer MESSAGE_LIMIT = null;
 	public static boolean FAKE_FEEDER = false;
 	
 	private static final int BEGINING_OF_ID = 29;
@@ -64,8 +66,8 @@ public class PipeToElasticsearch extends Countable {
 		PipeToElasticsearch.parseArgs(args);
 
 		// Timer to count messages per second
+		Timer timer = new Timer();
 		if (COUNTER) {
-			Timer timer = new Timer();
 			timer.schedule(new MessageCounter<PipeToElasticsearch>(), 0, 1000);
 		}
 
@@ -127,6 +129,7 @@ public class PipeToElasticsearch extends Countable {
 		BulkProcessor bulkProcessor = builder.build();
 				
 		// Get messages from named pipe and send them to Elasticsearch
+		long timeSpent = 0;
 		try {
 			String[] command = new String[] {"mkfifo", NAMED_PIPE_PATH};
 			Process process = Runtime.getRuntime().exec(command);
@@ -140,7 +143,13 @@ public class PipeToElasticsearch extends Countable {
 			String message;
 
 			int i = 0;
+			long beginTime = System.nanoTime();
 			while ((message = pipe.readLine()) != null) {
+				if (MESSAGE_LIMIT != null) {
+					if (i >= MESSAGE_LIMIT) {
+						break;
+					}
+				}
 				PipeToElasticsearch.nbMessagesSinceLastSecond.incrementAndGet();
 
 				while (PipeToElasticsearch.bulksInParallel.get() >= 200) {
@@ -155,6 +164,8 @@ public class PipeToElasticsearch extends Countable {
 					 System.out.println(message);
 				}
 			}
+			long endTime = System.nanoTime();
+			timeSpent = endTime - beginTime;
 			// Leave time in the end to execute the bulk
 			Thread.sleep(180000L + 5000L);
 			pipe.close();
@@ -164,6 +175,12 @@ public class PipeToElasticsearch extends Countable {
 			e.printStackTrace();
 		} finally {
 			bulkProcessor.close();
+			timer.cancel();
+			timer.purge();
+			System.out.println("-------------------------------------------------");
+			System.out.println("Total sent: " + PipeToElasticsearch.nbMessagesTotal);
+			System.out.println("Time spent: " + TimeUnit.NANOSECONDS.toSeconds(timeSpent) + "s");
+			System.out.println("Feed rate: " + PipeToElasticsearch.nbMessagesTotal.get() / TimeUnit.NANOSECONDS.toSeconds(timeSpent) + "messages/s");
 		}
 
 	}
@@ -226,6 +243,10 @@ public class PipeToElasticsearch extends Countable {
 		counter.setRequired(false);
 		options.addOption(counter);
 		
+		Option message_limit = new Option("l", "message_limit", true, "Set a limit number of messages to send");
+		message_limit.setRequired(false);
+		options.addOption(message_limit);
+		
 		Option fakeFeeder = new Option("ff", "fake_feeder", false, "Run the feeder without sending to Elasticsearch");
 		fakeFeeder.setRequired(false);
 		options.addOption(fakeFeeder);
@@ -285,6 +306,9 @@ public class PipeToElasticsearch extends Countable {
 		}
 		if (cmd.hasOption("counter")) {
 			COUNTER = true;
+		}
+		if (cmd.hasOption("message_limit")) {
+			MESSAGE_LIMIT = new Integer(cmd.getOptionValue("message_limit"));
 		}
 		if (cmd.hasOption("fake_feeder")) {
 			FAKE_FEEDER = true;
