@@ -165,6 +165,7 @@ public class PipeToElasticsearch extends Countable {
 				}
 				i++;
 			}
+			bulkProcessor.flush();
 			long endTime = System.nanoTime();
 			timeSpent = endTime - beginTime;
 			// Leave time in the end to execute the bulk
