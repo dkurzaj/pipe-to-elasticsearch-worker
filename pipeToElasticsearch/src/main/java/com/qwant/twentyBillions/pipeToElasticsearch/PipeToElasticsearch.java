@@ -112,7 +112,7 @@ public class PipeToElasticsearch extends Countable {
 			@Override
 			public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
 				PipeToElasticsearch.bulksInParallel.decrementAndGet();
-				System.err.println("[ERROR] Failed to execute bulk" + failure);
+				System.err.println("[ERROR] Failed to execute bulk: " + failure);
 			}
 		};
 
@@ -122,7 +122,7 @@ public class PipeToElasticsearch extends Countable {
 		// Size of a bulk must reach before being sent (Supposed equivalent in Vespa : FeedParams.maxChunkSizeBytes)
 		builder.setBulkSize(new ByteSizeValue(SIZE_MB_PER_BULK_LIMIT, ByteSizeUnit.MB));
 		// Limit on time before forcing bulk sending (Supposed equivalent in Vespa : FeedParams.localQueueTimeOut)
-		builder.setFlushInterval(TimeValue.timeValueMillis(NB_MSEC_BEFORE_FLUSHING_SENDING_QUEUE));
+		// builder.setFlushInterval(TimeValue.timeValueMillis(NB_MSEC_BEFORE_FLUSHING_SENDING_QUEUE));
 		// Number of parallel bulks possible (Supposed equivalent in Vespa : ConnectionParams.numPersistentConnectionsPerEndpoint)
 		builder.setConcurrentRequests(NB_CONCURENT_SENDING_THREADS);
 		
@@ -166,10 +166,9 @@ public class PipeToElasticsearch extends Countable {
 				i++;
 			}
 			bulkProcessor.flush();
+			while (!bulkProcessor.awaitClose(10, TimeUnit.MINUTES));
 			long endTime = System.nanoTime();
 			timeSpent = endTime - beginTime;
-			// Leave time in the end to execute the bulk
-			Thread.sleep(180000L + 5000L);
 			pipe.close();
 			client.close();
 		} catch (Exception e) {
@@ -182,7 +181,7 @@ public class PipeToElasticsearch extends Countable {
 			System.out.println("-------------------------------------------------");
 			System.out.println("Total sent: " + PipeToElasticsearch.nbMessagesTotal);
 			System.out.println("Time spent: " + TimeUnit.NANOSECONDS.toSeconds(timeSpent) + "s");
-			System.out.println("Feed rate: " + PipeToElasticsearch.nbMessagesTotal.get() / TimeUnit.NANOSECONDS.toSeconds(timeSpent) + "messages/s");
+			System.out.println("Feed rate: " + PipeToElasticsearch.nbMessagesTotal.get() / TimeUnit.NANOSECONDS.toSeconds(timeSpent) + " messages/s");
 		}
 
 	}
