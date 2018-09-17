@@ -308,7 +308,7 @@ public class PipeToElasticsearch extends Countable {
 			COUNTER = true;
 		}
 		if (cmd.hasOption("message_limit")) {
-			MESSAGE_LIMIT = new Integer(cmd.getOptionValue("message_limit"));
+			MESSAGE_LIMIT = Integer.valueOf(cmd.getOptionValue("message_limit"));
 		}
 		if (cmd.hasOption("fake_feeder")) {
 			FAKE_FEEDER = true;
