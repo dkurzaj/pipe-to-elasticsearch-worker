@@ -134,7 +134,7 @@ public class PipeToElasticsearch extends Countable {
 			Process process = Runtime.getRuntime().exec(command);
 			process.waitFor();
 			
-			command = new String[] {"/bin/bash", "-c", "kafkacat -b " + KAFKA_IP + ":" + KAFKA_PORT + " -G " + KAFKA_GROUP + " " + KAFKA_TOPIC + " > " + NAMED_PIPE_PATH};
+			command = new String[] {"/bin/bash", "-c", "kafkacat -C -u -b " + KAFKA_IP + ":" + KAFKA_PORT + " -G " + KAFKA_GROUP + " " + KAFKA_TOPIC + " > " + NAMED_PIPE_PATH};
 			process = Runtime.getRuntime().exec(command);
 
 			// Connect to the named pipe
