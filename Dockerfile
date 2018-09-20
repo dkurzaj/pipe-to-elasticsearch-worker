@@ -1,4 +1,4 @@
-FROM maven:3.5.2-jdk-8
+FROM maven:3.5.4-jdk-10
 
 COPY ./pipeToElasticsearch /usr/src/myapp/
 WORKDIR /usr/src/myapp/
